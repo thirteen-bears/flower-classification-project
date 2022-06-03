@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 # @file name  : common_tools.py
-# @author     : https://github.com/TingsongYu
-# @date       : 2021-02-27 10:08:00
 # @brief      : 通用函数库
 """
 import os
@@ -119,7 +117,7 @@ def plot_line(train_x, train_y, valid_x, valid_y, mode, out_dir):
 
 class Logger(object):
     def __init__(self, path_log):
-        log_name = os.path.basename(path_log)
+        log_name = os.path.basename(path_log) # 返回文件名 log.log
         self.log_name = log_name if log_name else "root"
         self.out_path = path_log
 
@@ -128,14 +126,14 @@ class Logger(object):
             os.makedirs(log_dir)
 
     def init_logger(self):
-        logger = logging.getLogger(self.log_name)
-        logger.setLevel(level=logging.INFO)
+        logger = logging.getLogger(self.log_name) # logging.getLogger(name)获取logger对象，初始化 logger
+        logger.setLevel(level=logging.INFO) # 设置日志级别为INFO级别
 
         # 配置文件Handler
-        file_handler = logging.FileHandler(self.out_path, 'w')
-        file_handler.setLevel(logging.INFO)
+        file_handler = logging.FileHandler(self.out_path, 'w') # FileHandler可将日志记录输出到磁盘文件中
+        file_handler.setLevel(logging.INFO) 
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        file_handler.setFormatter(formatter)
+        file_handler.setFormatter(formatter) #formatters:设置最终的输出格式
 
         # 配置屏幕Handler
         console_handler = logging.StreamHandler()
@@ -150,6 +148,7 @@ class Logger(object):
 
 
 def check_data_dir(path_tmp):
+    # Python assert（断言）用于判断一个表达式，在表达式条件为false 的时候触发异常
     assert os.path.exists(path_tmp), \
         "\n\n路径不存在，当前变量中指定的路径是：\n{}\n请检查相对路径的设置，或者文件是否存在".format(os.path.abspath(path_tmp))
 
@@ -162,7 +161,7 @@ if __name__ == "__main__":
     logger = Logger('./logtest.log')
     logger = logger.init_logger()
     for i in range(10):
-        logger.info('test:' + str(i))
+        logger.info('test:' + str(i)) 
 
     from config.flower_config import cfg
     logger.info(cfg)

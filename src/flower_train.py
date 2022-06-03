@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 # @file name  : flower_train.py
-# @author     : TingsongYu https://github.com/TingsongYu
-# @date       : 2021-04-22
 # @brief      : 模型训练主代码
 """
 
@@ -18,6 +16,8 @@ import torch.optim as optim
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision.models import resnet18
+
+# Here are self-defined functions
 from tools.model_trainer import ModelTrainer
 from tools.common_tools import setup_seed, show_confMat, plot_line, Logger, check_data_dir
 from config.flower_config import cfg
@@ -31,16 +31,15 @@ parser = argparse.ArgumentParser(description='Training')
 parser.add_argument('--lr', default=None, type=float, help='learning rate')
 parser.add_argument('--bs', default=None, type=int, help='training batch size')
 parser.add_argument('--max_epoch', type=int, default=None)
-parser.add_argument('--data_root_dir', default=r"G:\deep_learning_data\flowers102", type=str,
+parser.add_argument('--data_root_dir', default=r"../../data/classification_dataset/flowers102", type=str,
                     help="path to your dataset")
 args = parser.parse_args()
 
-cfg.lr_init = args.lr if args.lr else cfg.lr_init
+cfg.lr_init = args.lr if args.lr else cfg.lr_init # 两种办法读配置文件：命令行输入/cfg定义
 cfg.train_bs = args.bs if args.bs else cfg.train_bs
 cfg.max_epoch = args.max_epoch if args.max_epoch else cfg.max_epoch
 
 if __name__ == "__main__":
-
     # step0: config
     # data\pretrained_model
     path_state_dict = os.path.join(BASE_DIR, "..", "..", "data", "pretrained_model", "resnet18-5c106cde.pth")
@@ -56,7 +55,7 @@ if __name__ == "__main__":
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
 
-    # 创建logger
+    # create logger
     path_log = os.path.join(log_dir, "log.log")
     logger = Logger(path_log)
     logger = logger.init_logger()

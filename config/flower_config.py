@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 # @file name  : flower_config.py
-# @author     : TingsongYu https://github.com/TingsongYu
-# @date       : 2020-04-23
 # @brief      : 花朵分类参数配置
 """
 import torch
