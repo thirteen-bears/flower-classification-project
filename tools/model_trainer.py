@@ -1,12 +1,14 @@
 # -*- coding: utf-8 -*-
 """
 # @file name  : model_trainer.py
+# @author     : TingsongYu https://github.com/TingsongYu
+# @date       : 2020-02-29
 # @brief      : 模型训练类
 """
 import torch
 import numpy as np
 from collections import Counter
-
+from tools.mixup import mixup_criterion, mixup_data
 
 class ModelTrainer(object):
 
@@ -21,7 +23,6 @@ class ModelTrainer(object):
         acc_avg = 0
         path_error = []
         label_list = []
-        # 在实际循环中，这里的data_loader是整个train_loader或者validation_loader
         for i, data in enumerate(data_loader):
 
             # _, labels = data
@@ -32,23 +33,33 @@ class ModelTrainer(object):
             # inputs, labels = data
             inputs, labels = inputs.to(device), labels.to(device)
 
+            # mixup
+            if cfg.mixup:
+                mixed_inputs, label_a, label_b, lam = mixup_data(inputs, labels, cfg.mixup_alpha, device)
+                inputs = mixed_inputs
+
             # forward & backward
             outputs = model(inputs)
             optimizer.zero_grad()
-            loss = loss_f(outputs.cpu(), labels.cpu())
+
+            # loss 计算
+            if cfg.mixup:
+                loss = mixup_criterion(loss_f, outputs.cpu(), label_a.cpu(), label_b.cpu(), lam)
+            else:
+                loss = loss_f(outputs.cpu(), labels.cpu())
+
             loss.backward()
             optimizer.step()
 
             # 统计loss
-            loss_sigma.append(loss.item()) # 不断append loss信息
-            loss_mean = np.mean(loss_sigma) # 直接计算更新后的平均数
+            loss_sigma.append(loss.item())
+            loss_mean = np.mean(loss_sigma)
             #
-            _, predicted = torch.max(outputs.data, 1) # get 0-1 labels
-            
-            for j in range(len(labels)): # 这里的labels是一个batch的labels
+            _, predicted = torch.max(outputs.data, 1)
+            for j in range(len(labels)):
                 cate_i = labels[j].cpu().numpy()
                 pre_i = predicted[j].cpu().numpy()
-                conf_mat[cate_i, pre_i] += 1. # 这里建立混淆矩阵的方法很巧妙
+                conf_mat[cate_i, pre_i] += 1.
                 if cate_i != pre_i:
                     path_error.append((cate_i, pre_i, path_imgs[j]))    # 记录错误样本的信息
             acc_avg = conf_mat.trace() / conf_mat.sum()
@@ -75,7 +86,7 @@ class ModelTrainer(object):
             inputs, labels = inputs.to(device), labels.to(device)
 
             outputs = model(inputs)
-            loss = loss_f(outputs.cpu(), labels.cpu()) # 不进行梯度更新
+            loss = loss_f(outputs.cpu(), labels.cpu())
 
             # 统计混淆矩阵
             _, predicted = torch.max(outputs.data, 1)

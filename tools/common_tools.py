@@ -1,18 +1,21 @@
 # -*- coding: utf-8 -*-
 """
 # @file name  : common_tools.py
+# @author     : https://github.com/TingsongYu
+# @date       : 2021-02-27 10:08:00
 # @brief      : 通用函数库
 """
 import os
 import logging
 import torch
 import random
-import psutil
-import pickle
-import numpy as np
-from PIL import Image
-import torchvision.transforms as transforms
 import matplotlib.pyplot as plt
+import torch.nn as nn
+import numpy as np
+from datetime import datetime
+from models.vgg_tv import vgg16_bn
+from models.se_resnet import se_resnet50
+from torchvision.models import resnet18
 
 
 def setup_seed(seed=12345):
@@ -117,7 +120,7 @@ def plot_line(train_x, train_y, valid_x, valid_y, mode, out_dir):
 
 class Logger(object):
     def __init__(self, path_log):
-        log_name = os.path.basename(path_log) # 返回文件名 log.log
+        log_name = os.path.basename(path_log)
         self.log_name = log_name if log_name else "root"
         self.out_path = path_log
 
@@ -126,14 +129,14 @@ class Logger(object):
             os.makedirs(log_dir)
 
     def init_logger(self):
-        logger = logging.getLogger(self.log_name) # logging.getLogger(name)获取logger对象，初始化 logger
-        logger.setLevel(level=logging.INFO) # 设置日志级别为INFO级别
+        logger = logging.getLogger(self.log_name)
+        logger.setLevel(level=logging.INFO)
 
         # 配置文件Handler
-        file_handler = logging.FileHandler(self.out_path, 'w') # FileHandler可将日志记录输出到磁盘文件中
-        file_handler.setLevel(logging.INFO) 
+        file_handler = logging.FileHandler(self.out_path, 'w')
+        file_handler.setLevel(logging.INFO)
         formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        file_handler.setFormatter(formatter) #formatters:设置最终的输出格式
+        file_handler.setFormatter(formatter)
 
         # 配置屏幕Handler
         console_handler = logging.StreamHandler()
@@ -148,9 +151,63 @@ class Logger(object):
 
 
 def check_data_dir(path_tmp):
-    # Python assert（断言）用于判断一个表达式，在表达式条件为false 的时候触发异常
     assert os.path.exists(path_tmp), \
         "\n\n路径不存在，当前变量中指定的路径是：\n{}\n请检查相对路径的设置，或者文件是否存在".format(os.path.abspath(path_tmp))
+
+
+def get_model(cfg, cls_num, logger):
+    """
+    创建模型
+    :param cfg:
+    :param cls_num:
+    :return:
+    """
+    if cfg.model_name == "resnet18":
+        model = resnet18()
+        if os.path.exists(cfg.path_resnet18):
+            pretrained_state_dict = torch.load(cfg.path_resnet18, map_location="cpu")
+            model.load_state_dict(pretrained_state_dict)    # load pretrain model
+            logger.info("load pretrained model!")
+        # 修改最后一层
+        num_ftrs = model.fc.in_features
+        model.fc = nn.Linear(num_ftrs, cls_num)  # 102
+    elif cfg.model_name == "vgg16_bn":
+        model = vgg16_bn()
+        if os.path.exists(cfg.path_vgg16bn):
+            pretrained_state_dict = torch.load(cfg.path_vgg16bn, map_location="cpu")
+            model.load_state_dict(pretrained_state_dict)    # load pretrain model
+            logger.info("load pretrained model!")
+        # 替换网络层
+        in_feat_num = model.classifier[6].in_features
+        model.classifier[6] = nn.Linear(in_feat_num, cls_num)
+    elif cfg.model_name == "se_resnet50":
+        model = se_resnet50()
+        if os.path.exists(cfg.path_se_res50):
+            model.load_state_dict(torch.load(cfg.path_se_res50))    # load pretrain model
+            logger.info("load pretrained model!")
+        in_feat_num = model.fc.in_features
+        model.fc = nn.Linear(in_feat_num, cls_num)
+    else:
+        raise Exception("Invalid model name. got {}".format(cfg.model_name))
+    return model
+
+
+def make_logger(out_dir):
+    """
+    在out_dir文件夹下以当前时间命名，创建日志文件夹，并创建logger用于记录信息
+    :param out_dir: str
+    :return:
+    """
+    now_time = datetime.now()
+    time_str = datetime.strftime(now_time, '%m-%d_%H-%M')
+    log_dir = os.path.join(out_dir, time_str)  # 根据config中的创建时间作为文件夹名
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+    # 创建logger
+    path_log = os.path.join(log_dir, "log.log")
+    logger = Logger(path_log)
+    logger = logger.init_logger()
+    return logger, log_dir
 
 
 if __name__ == "__main__":
@@ -161,7 +218,7 @@ if __name__ == "__main__":
     logger = Logger('./logtest.log')
     logger = logger.init_logger()
     for i in range(10):
-        logger.info('test:' + str(i)) 
+        logger.info('test:' + str(i))
 
     from config.flower_config import cfg
     logger.info(cfg)

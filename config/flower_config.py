@@ -1,15 +1,35 @@
 # -*- coding: utf-8 -*-
 """
 # @file name  : flower_config.py
+# @author     : TingsongYu https://github.com/TingsongYu
+# @date       : 2020-04-23
 # @brief      : 花朵分类参数配置
 """
-import torch
+import os
+import sys
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+sys.path.append(os.path.join(BASE_DIR, '..'))
 import torchvision.transforms as transforms
 from easydict import EasyDict
 
 cfg = EasyDict()  # 访问属性的方式去使用key-value 即通过 .key获得value
-cfg.train_bs = 32
-cfg.valid_bs = 64
+
+# cfg.model_name = "resnet18"
+# cfg.model_name = "vgg16_bn"
+cfg.model_name = "se_resnet50"
+
+cfg.mixup = True  # 是否采用mixup
+cfg.mixup_alpha = 1.  # beta分布的参数. beta分布是一组定义在(0,1) 区间的连续概率分布。
+cfg.label_smooth = True  # 是否采用标签平滑
+cfg.label_smooth_eps = 0.01  # 标签平滑超参数 eps
+
+data_dir = os.path.join(BASE_DIR, "..", "..", "data")
+cfg.path_resnet18 = os.path.join(data_dir, "pretrained_model", "resnet18-5c106cde.pth")
+cfg.path_vgg16bn = os.path.join(data_dir, "pretrained_model", "vgg16_bn-6c64b313.pth")
+cfg.path_se_res50 = os.path.join(data_dir, "pretrained_model", "seresnet50-60a8950a85b2b.pkl")
+
+cfg.train_bs = 16
+cfg.valid_bs = 16  # 思考：显存不足时， 设置为1，对训练影响吗？
 cfg.workers = 0
 
 cfg.lr_init = 0.01

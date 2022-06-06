@@ -7,12 +7,12 @@
 import os
 import sys
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-sys.path.append(os.path.join(BASE_DIR, '..'))
+sys.path.append(os.path.join(BASE_DIR, '..')) # 添加主目录
 import pickle
 import argparse
 import torch
 import numpy as np
-import torch.optim as optim
+import torch.optim as optim 
 import torch.nn as nn
 from torch.utils.data import DataLoader
 from torchvision.models import resnet18
@@ -88,6 +88,7 @@ if __name__ == "__main__":
 
     # step4: 迭代训练
     # 记录训练所采用的模型、损失函数、优化器、配置参数cfg
+    # 记得记录模型和cfg!
     logger.info("cfg:\n{}\n loss_f:\n{}\n scheduler:\n{}\n optimizer:\n{}\n model:\n{}".format(
         cfg, loss_f, scheduler, optimizer, model))
 
@@ -131,11 +132,15 @@ if __name__ == "__main__":
             torch.save(checkpoint, path_checkpoint)
 
             # 保存错误图片的路径
+            # 第一步。建立名称字符串
             err_ims_name = "error_imgs_{}.pkl".format(epoch) if epoch == cfg.max_epoch-1 else "error_imgs_best.pkl"
+            # 第二步。建立具体绝对路径存储错误图像
             path_err_imgs = os.path.join(log_dir, err_ims_name)
+            # 第三步。建立字典存储图片路径
             error_info = {}
             error_info["train"] = path_error_train
             error_info["valid"] = path_error_valid
+            # 第四步。把图片路径写入pkl文件中
             pickle.dump(error_info, open(path_err_imgs, 'wb'))
 
     logger.info("{} done, best acc: {} in :{}".format(

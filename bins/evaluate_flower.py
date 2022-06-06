@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 # @file name  : evaluate.py
-# @author     : https://github.com/TingsongYu
-# @date       : 2021-03-07
 # @brief      : 模型在test上进行指标计算
 """
 import torch
@@ -17,7 +15,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 if __name__ == '__main__':
     # config
-    data_dir = r"G:\deep_learning_data\flowers102\test"
+    data_dir = r"../../data/classification_dataset/flowers102/test"
     path_state_dict = r"F:\prj_class\results\04-23_23-46\checkpoint_best.pkl"
 
     norm_mean = [0.485, 0.456, 0.406]  # imagenet 120万图像统计得来
