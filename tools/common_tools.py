@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 # @file name  : common_tools.py
-# @author     : https://github.com/TingsongYu
-# @date       : 2021-02-27 10:08:00
 # @brief      : 通用函数库
 """
 import os
@@ -170,7 +168,7 @@ def get_model(cfg, cls_num, logger):
             logger.info("load pretrained model!")
         # 修改最后一层
         num_ftrs = model.fc.in_features
-        model.fc = nn.Linear(num_ftrs, cls_num)  # 102
+        model.fc = nn.Linear(num_ftrs, cls_num)  # 1 02
     elif cfg.model_name == "vgg16_bn":
         model = vgg16_bn()
         if os.path.exists(cfg.path_vgg16bn):

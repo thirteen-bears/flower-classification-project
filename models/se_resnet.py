@@ -16,8 +16,8 @@ class SELayer(nn.Module):
 
     def forward(self, x):
         b, c, _, _ = x.size()
-        y = self.avg_pool(x).view(b, c)
-        y = self.fc(y).view(b, c, 1, 1)
+        y = self.avg_pool(x).view(b, c) # squeeze
+        y = self.fc(y).view(b, c, 1, 1) # excitation
         return x * y.expand_as(x)  # expand_as把一个tensor变成和函数括号内一样形状的tensor
 
 

@@ -1,6 +1,8 @@
 # -*- coding: utf-8 -*-
 """
 # @file name  : parse_error_imgs.py
+# @author     : https://github.com/TingsongYu
+# @date       : 2021-02-27
 # @brief      : 将错误分类的图片挑出来，进行观察
 """
 import os
@@ -21,7 +23,7 @@ def my_mkdir(my_dir):
 
 if __name__ == '__main__':
     path_pkl = r"F:\prj_class\results\04-23_23-46\error_imgs_best.pkl"
-    data_root_dir = r"../../data/classification_dataset/flowers102/jpg"
+    data_root_dir = r"G:\deep_learning_data\flowers102\jpg"
     out_dir = path_pkl[:-4]  # 输出文件目录
     error_info = load_pickle(path_pkl)
 

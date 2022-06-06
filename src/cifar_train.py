@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-# @file name  : flower_train.py
+# @file name  : cifar_train.py
 # @author     : TingsongYu https://github.com/TingsongYu
 # @date       : 2021-04-22
 # @brief      : 模型训练主代码
@@ -10,27 +10,27 @@ import os
 import sys
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.join(BASE_DIR, '..'))
-import pickle
 import argparse
+import pickle
 import torch.optim as optim
 from torch.utils.data import DataLoader
-from torchvision.models import resnet18
 from tools.model_trainer import ModelTrainer
-# from tools.common_tools import setup_seed, show_confMat, plot_line, Logger, check_data_dir
 from tools.common_tools import *
-from config.flower_config import cfg
-from datetime import datetime
-from datasets.flower_102 import FlowerDataset
 from tools.my_loss import LabelSmoothLoss
+from models.resnet_cifar10 import resnet20
+from config.cifar_config import cfg
+from datetime import datetime
+from datasets.cifar_longtail import CifarLTDataset
+from tools.progressively_balance import ProgressiveSampler
 
 setup_seed(12345)  # 先固定随机种子
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 parser = argparse.ArgumentParser(description='Training')
-parser.add_argument('--lr', default=None, type=float, help='learning rate')
-parser.add_argument('--bs', default=None, type=int, help='training batch size')
-parser.add_argument('--max_epoch', type=int, default=None)
-parser.add_argument('--data_root_dir', default=r"G:\deep_learning_data\flowers102", type=str,
+parser.add_argument('--lr', default=None, help='learning rate')
+parser.add_argument('--bs', default=None, help='training batch size')
+parser.add_argument('--max_epoch', default=None)
+parser.add_argument('--data_root_dir', default=r"G:\deep_learning_data\cifar10",
                     help="path to your dataset")
 args = parser.parse_args()
 
@@ -39,11 +39,11 @@ cfg.train_bs = args.bs if args.bs else cfg.train_bs
 cfg.max_epoch = args.max_epoch if args.max_epoch else cfg.max_epoch
 
 if __name__ == "__main__":
-
-    # step0: config
-    train_dir = os.path.join(args.data_root_dir, "train")
-    valid_dir = os.path.join(args.data_root_dir, "valid")
-    check_data_dir(train_dir), check_data_dir(valid_dir)
+    # step0: setting path
+    train_dir = os.path.join(args.data_root_dir, "cifar10_train")
+    valid_dir = os.path.join(args.data_root_dir, "cifar10_test")
+    check_data_dir(train_dir)
+    check_data_dir(valid_dir)
 
     # 创建logger
     res_dir = os.path.join(BASE_DIR, "..", "..", "results")
@@ -51,13 +51,15 @@ if __name__ == "__main__":
 
     # step1： 数据集
     # 构建MyDataset实例， 构建DataLoder
-    train_data = FlowerDataset(root_dir=train_dir, transform=cfg.transforms_train)
-    valid_data = FlowerDataset(root_dir=valid_dir, transform=cfg.transforms_valid)
-    train_loader = DataLoader(dataset=train_data, batch_size=cfg.train_bs, shuffle=True, num_workers=cfg.workers)
+    train_data = CifarLTDataset(root_dir=train_dir, transform=cfg.transforms_train, isTrain=True)
+    valid_data = CifarLTDataset(root_dir=valid_dir, transform=cfg.transforms_valid, isTrain=False)
+    # train_loader = DataLoader(dataset=train_data, batch_size=cfg.train_bs, shuffle=True, num_workers=cfg.workers)
     valid_loader = DataLoader(dataset=valid_data, batch_size=cfg.valid_bs, num_workers=cfg.workers)
+    if cfg.pb:
+        sampler_generator = ProgressiveSampler(train_data, cfg.max_epoch)
 
     # step2: 模型
-    model = get_model(cfg, train_data.cls_num, logger)
+    model = resnet20()
     model.to(device)  # to device， cpu or gpu
 
     # step3: 损失函数、优化器
@@ -77,7 +79,11 @@ if __name__ == "__main__":
     acc_rec = {"train": [], "valid": []}
     best_acc, best_epoch = 0, 0
     for epoch in range(cfg.max_epoch):
-
+        if cfg.pb:
+            sampler, _ = sampler_generator(epoch)
+            train_loader = DataLoader(dataset=train_data, batch_size=cfg.train_bs, shuffle=False,
+                                      num_workers=cfg.workers,
+                                      sampler=sampler)
         loss_train, acc_train, mat_train, path_error_train = ModelTrainer.train(
             train_loader, model, loss_f, optimizer, scheduler, epoch, device, cfg, logger)
 
