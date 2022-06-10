@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 # @file name  : model_trainer.py
-# @author     : TingsongYu https://github.com/TingsongYu
-# @date       : 2020-02-29
 # @brief      : 模型训练类
 """
 import torch

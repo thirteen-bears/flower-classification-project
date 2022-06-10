@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 # @file name  : mixup.py
-# @author     : https://github.com/TingsongYu
-# @date       : 2021-03-03 10:08:00
 # @brief      : mixup 实现
 """
 import numpy as np
@@ -14,7 +12,7 @@ def mixup_data(x, y, alpha=1.0, device=True):
 
     # 通过beta分布获得lambda，beta分布的参数alpha == beta，因此都是alpha
     lam = np.random.beta(alpha, alpha) if alpha > 0 else 1
-
+ 
     # 获取需要混叠的图片的标号
     batch_size = x.size()[0]
     index = torch.randperm(batch_size).to(device)

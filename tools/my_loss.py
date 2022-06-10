@@ -1,8 +1,6 @@
 # -*- coding: utf-8 -*-
 """
 # @file name  : my_loss.py
-# @author     : https://github.com/TingsongYu
-# @date       : 2021-02-28 10:08:00
 # @brief      : 新的loss
 """
 from abc import ABC
@@ -23,9 +21,11 @@ class LabelSmoothLoss(nn.Module):
     #     # 2. 制作权重，真实类别的权重为 1-smoothing， 其余类别权重为  (1-smoothing) / (K-1)
     #     # 3. 依交叉熵损失函数公式计算loss
     #     return loss
-
+  
     def forward(self, input, target):
+        #  先转成softmax,再计算权重
         log_prob = F.log_softmax(input, dim=-1)  # log_p 向量
+        # 
         weight = input.new_ones(input.size()) * self.smoothing / (input.size(-1) - 1.)
         weight.scatter_(-1, target.unsqueeze(-1), (1. - self.smoothing))  # Q向量
         loss = (-weight * log_prob).sum(dim=-1).mean()  # log_p * Q 再相加
